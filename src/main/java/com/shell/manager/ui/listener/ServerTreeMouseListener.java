@@ -8,6 +8,7 @@ import com.shell.manager.data.model.Server;
 import com.shell.manager.ui.dialog.MsgDialogUtil;
 import com.shell.manager.ui.dialog.OneInputDialog;
 import com.shell.manager.ui.dialog.ServerRegisterDialog;
+import com.shell.manager.ui.listener.event.OperateServerEvent;
 import com.shell.manager.ui.listener.event.RefreshServerTreeEvent;
 import com.shell.manager.ui.panel.MainPanelWindow;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,11 +111,11 @@ public class ServerTreeMouseListener implements MouseListener, ActionListener {
     @Override
     public void mousePressed(MouseEvent e) {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-        if (ObjectUtils.isEmpty(node) || e.getButton() != 3) {
+        if (ObjectUtils.isEmpty(node) ) {
             return;
         }
         currentNodeName = node.toString();
-        if (Integer.compare(node.getLevel(), 0) == 0) {
+        if (Integer.compare(node.getLevel(), 0) == 0&&e.getButton() == 3) {
             TreePath path = tree.getPathForLocation(e.getX(), e.getY());
             if (path == null) {
                 return;
@@ -125,7 +126,7 @@ public class ServerTreeMouseListener implements MouseListener, ActionListener {
                 groupMenu.show(tree, e.getX(), e.getY());
             }
 
-        } else if (Integer.compare(node.getLevel(), 1) == 0) {
+        } else if (Integer.compare(node.getLevel(), 1) == 0&&e.getButton() == 3) {
             TreePath path = tree.getPathForLocation(e.getX(), e.getY());
             if (path == null) {
                 return;
@@ -135,7 +136,9 @@ public class ServerTreeMouseListener implements MouseListener, ActionListener {
             if (e.getButton() == 3) {
                 serverMenu.show(tree, e.getX(), e.getY());
             }
-        } else {
+        } else  if (Integer.compare(node.getLevel(), 2) == 0&& e.getClickCount() == 2){
+            SpringContextUtil.publishEvent(new OperateServerEvent(currentNodeName));
+        }else {
             return;
         }
     }
