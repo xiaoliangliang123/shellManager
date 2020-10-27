@@ -3,6 +3,7 @@ package com.shell.manager.config;
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.Session;
 import ch.ethz.ssh2.StreamGobbler;
+import com.shell.manager.ui.listener.UIUpdateListener;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,19 +14,23 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * 模拟交互式终端
+ * *
+ * @author alan.wang
  *
- * @author doctor
- *
- * @time 2015年8月6日
  *
  *
  */
-public final class SSHAgent {
+
+public class SSHAgent extends UIUpdateListener {
+
+
+    private BlockingQueue<String> msgQueue = new ArrayBlockingQueue<String>(1000);
     private Logger log = LoggerFactory.getLogger(getClass());
     private Connection connection;
     private Session session;
@@ -33,9 +38,8 @@ public final class SSHAgent {
     private PrintWriter printWriter;
     private BufferedReader stderr;
     private ExecutorService service = Executors.newFixedThreadPool(3);
-    private Scanner scanner = new Scanner(System.in);
 
-    public void initSession(String hostName, String userName, String passwd) throws IOException {
+    public void initSession(String hostName, String userName, String passwd) throws IOException, InterruptedException {
         connection = new Connection(hostName);
         connection.connect();
 
@@ -49,9 +53,10 @@ public final class SSHAgent {
         stdout = new BufferedReader(new InputStreamReader(new StreamGobbler(session.getStdout()), StandardCharsets.UTF_8));
         stderr = new BufferedReader(new InputStreamReader(new StreamGobbler(session.getStderr()), StandardCharsets.UTF_8));
         printWriter = new PrintWriter(session.getStdin());
+        onCallback();
     }
 
-    public void execCommand() throws IOException {
+    public void onCallback(){
         service.submit(new Runnable() {
 
             @Override
@@ -61,7 +66,7 @@ public final class SSHAgent {
                 String line;
                 try {
                     while ((line = stdout.readLine()) != null) {
-                        System.out.println(line);
+                        onUpdate(line);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -74,40 +79,44 @@ public final class SSHAgent {
 
             @Override
             public void run() {
-//                while (true) {
-//                    try {
-//                        TimeUnit.SECONDS.sleep(1);
-//                    } catch (InterruptedException e) {
-//
-//                        e.printStackTrace();
-//                    }
-//                    System.out.print("input:");
-//                    String nextLine = scanner.nextLine();
-                    printWriter.write("cd /home\r\n");
-                    printWriter.write("ls\r\n");
-                    //printWriter.write(nextLine + "\r\n");
-                    printWriter.flush();
-//                }
+
+                try {
+
+                    String cmd = null;
+                    while ((cmd = msgQueue.take()) != null) {
+                        printWriter.write(cmd);
+                        printWriter.flush();
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
 
             }
         });
 
     }
 
-    public void close() {
-        IOUtils.closeQuietly(stdout);
-        IOUtils.closeQuietly(stderr);
-        IOUtils.closeQuietly(printWriter);
-        IOUtils.closeQuietly(scanner);
+    public void execCommand(String cmd) throws IOException {
+        msgQueue.add(cmd);
+    }
+
+
+
+
+
+
+    public void close() throws IOException {
+        IOUtils.close(stdout);
+        IOUtils.close(stderr);
+        IOUtils.close(printWriter);
         session.close();
         connection.close();
     }
 
     /**
-     * @param args
      * @throws IOException
      */
-    public static void run() throws IOException {
+    public static void run() throws IOException, InterruptedException {
 
         String host = "154.8.162.93";
         String user = "root";
@@ -115,7 +124,6 @@ public final class SSHAgent {
         SSHAgent sshAgent = new SSHAgent();
         sshAgent.initSession(host, user, password);
 
-        sshAgent.execCommand();
 
         // sshAgent.close();
 

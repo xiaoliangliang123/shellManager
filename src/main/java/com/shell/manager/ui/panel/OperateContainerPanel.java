@@ -18,12 +18,13 @@ public class OperateContainerPanel extends JPanel {
 
     }
 
-    public void loadOperateServerWindow(String name){
+    public void loadOperateServerWindow(String name) throws Exception {
 
         this.removeAll();
         this.setLayout(new BorderLayout());
         operateServerPanel.setTitle(name);
         this.add(operateServerPanel, BorderLayout.CENTER);
+        operateServerPanel.connectSSH(name);
         this.updateUI();
     }
 }
