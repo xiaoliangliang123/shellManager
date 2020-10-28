@@ -24,7 +24,7 @@ public class MainPanelWindow  extends JFrame{
         add(leftServerListPanel, BorderLayout.WEST);
         add(operateContainerPanel, BorderLayout.CENTER);
 
-        this.setTitle("shell manager");
+        this.setTitle("shell manager v1.0 auther@wangliang(email:13889463037@163.com)");
         getRootPane().setBorder(
                 BorderFactory.createMatteBorder(4, 4, 4, 4, Color.GRAY));
 

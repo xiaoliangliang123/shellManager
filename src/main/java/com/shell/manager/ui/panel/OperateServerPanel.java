@@ -1,5 +1,6 @@
 package com.shell.manager.ui.panel;
 
+import com.shell.manager.config.KeybordUtil;
 import com.shell.manager.config.SSHAgent;
 import com.shell.manager.config.SpringContextUtil;
 import com.shell.manager.data.db.DatabaseUtil;
@@ -7,6 +8,7 @@ import com.shell.manager.data.model.Server;
 import com.shell.manager.ui.listener.UIUpdateListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.util.unit.DataUnit;
 
 import javax.annotation.PostConstruct;
@@ -19,7 +21,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.io.IOException;
 
-@Component
 public class OperateServerPanel extends JPanel implements KeyListener ,UIUpdateListener.UIUpdateActioner,MouseMotionListener {
 
     private String title ;
@@ -27,22 +28,28 @@ public class OperateServerPanel extends JPanel implements KeyListener ,UIUpdateL
     private JTextArea shellArea = new JTextArea();
     private SSHAgent sshAgent = new SSHAgent();
     private DatabaseUtil databaseUtil;
+    private StringBuilder keyBorder = new StringBuilder();
 
-    @PostConstruct
-    public void init() throws IOException {
-        JScrollPane jScrollPane=new JScrollPane(shellArea);
-        this.setBorder(BorderFactory.createTitledBorder(title));
-        //this.setPreferredSize(new Dimension(430, 380));
-        this.setLayout(new BorderLayout());
-        //shellArea.setPreferredSize(new Dimension(430,200));
-        shellArea.setEditable(true);
-        shellArea.setLineWrap(true);
-        this.add(jScrollPane,BorderLayout.CENTER);
-        requestFocus();
-        shellArea.setLineWrap(true);
-        shellArea.addKeyListener(this);
-        sshAgent.setUiUpdateActioner(this);
-        this.setVisible(true);
+    public  OperateServerPanel()  {
+
+        try{
+            JScrollPane jScrollPane=new JScrollPane(shellArea);
+            this.setBorder(BorderFactory.createTitledBorder(title));
+            this.setLayout(new BorderLayout());
+            shellArea.setEditable(true);
+            shellArea.setLineWrap(true);
+            this.add(jScrollPane,BorderLayout.CENTER);
+            requestFocus();
+            shellArea.setLineWrap(true);
+            shellArea.addKeyListener(this);
+            sshAgent.setUiUpdateActioner(this);
+            shellArea.setBackground(Color.black);
+            shellArea.setForeground(Color.WHITE);
+            this.setVisible(true);
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+
     }
 
     public void connectSSH(String nodeName) throws Exception {
@@ -58,7 +65,20 @@ public class OperateServerPanel extends JPanel implements KeyListener ,UIUpdateL
 
     @Override // 按下
     public void keyPressed(KeyEvent e) {
-        System.out.print("按下："+KeyEvent.getKeyText(e.getKeyCode()) + "\n");
+        try{
+            String keycode = KeyEvent.getKeyText(e.getKeyCode());
+            System.out.print("按下：" + KeyEvent.getKeyText(e.getKeyCode()) + "\n");
+            if(KeybordUtil.isEnter(keycode)){
+                sshAgent.execCommand(keyBorder.toString());
+                keyBorder.setLength(0);
+            }else if(KeybordUtil.isTab(keycode)){
+                sshAgent.execCommand(keyBorder.toString());
+                keyBorder.setLength(0);
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+
     }
     @Override // 松开
     public void keyReleased(KeyEvent e) {
@@ -68,12 +88,21 @@ public class OperateServerPanel extends JPanel implements KeyListener ,UIUpdateL
     @Override // 输入的内容
     public void keyTyped(KeyEvent e) {
         System.out.print("输入：" + e.getKeyChar() + "\n");
+        try{
+            char keycode = e.getKeyChar();
+            keyBorder.append(keycode);
+        }catch (Exception exception){
+            exception.printStackTrace();
+        }
     }
 
     @Override
     public void doUpdate(String content) {
         //System.out.print(content);
-        shellArea.append(content+"\n\r");
+        shellArea.append(content+"\n");
+        shellArea.setCaretPosition(shellArea.getText().length()-1);
+
+
     }
 
     @Override
@@ -85,4 +114,6 @@ public class OperateServerPanel extends JPanel implements KeyListener ,UIUpdateL
     public void mouseMoved(MouseEvent e) {
         boolean status = this.requestFocusInWindow();
     }
+
+
 }

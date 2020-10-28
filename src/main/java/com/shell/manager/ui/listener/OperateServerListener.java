@@ -22,7 +22,7 @@ public class OperateServerListener {
     public void listen(OperateServerEvent event) throws Exception {
         String nodeName = (String) event.getSource();
         Server server = databaseUtil.getServerRespository().findByName(nodeName).get();
-        operateContainerPanel.loadOperateServerWindow(server.getName());
+        operateContainerPanel.addOperateServerWindow(server.getName());
         System.out.print(server.toString());
     }
 }

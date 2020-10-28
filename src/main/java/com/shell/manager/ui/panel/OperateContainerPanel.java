@@ -8,23 +8,22 @@ import javax.swing.*;
 import java.awt.*;
 
 @Component
-public class OperateContainerPanel extends JPanel {
+public class OperateContainerPanel extends JTabbedPane{
 
-    @Autowired
-    private OperateServerPanel operateServerPanel;
+
     @PostConstruct
     public void init() {
+        //super(JTabbedPane.CENTER);
         this.setBorder(BorderFactory.createTitledBorder(BorderFactory.createRaisedBevelBorder(),"operate window"));
-
     }
 
-    public void loadOperateServerWindow(String name) throws Exception {
+    public void addOperateServerWindow(String name) throws Exception {
 
-        this.removeAll();
-        this.setLayout(new BorderLayout());
+        OperateServerPanel operateServerPanel = new OperateServerPanel();
         operateServerPanel.setTitle(name);
-        this.add(operateServerPanel, BorderLayout.CENTER);
         operateServerPanel.connectSSH(name);
+        addTab( name ,operateServerPanel)  ;
         this.updateUI();
     }
+
 }

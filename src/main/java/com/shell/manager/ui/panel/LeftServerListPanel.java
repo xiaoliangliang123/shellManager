@@ -3,6 +3,7 @@ package com.shell.manager.ui.panel;
 import com.shell.manager.data.db.DatabaseUtil;
 import com.shell.manager.data.model.Group;
 import com.shell.manager.data.model.Server;
+import com.shell.manager.ui.DBTreeCellRenderer;
 import com.shell.manager.ui.listener.ServerTreeMouseListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,7 @@ public class LeftServerListPanel extends JPanel {
 
     public void reloadTree() throws Exception {
 
+        treeRoot.setCellRenderer(new DBTreeCellRenderer());
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("servers");
         List<Group> groups = databaseUtil.getGroupRespository().queryAll();
         for (Group group : groups) {
