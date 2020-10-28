@@ -40,6 +40,7 @@ public class MainPanelWindow  extends JFrame{
 
 
         setCursor(new Cursor(Cursor.HAND_CURSOR));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     }
 
