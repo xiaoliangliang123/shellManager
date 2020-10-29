@@ -11,6 +11,8 @@ import com.shell.manager.ui.dialog.ServerRegisterDialog;
 import com.shell.manager.ui.listener.event.OperateServerEvent;
 import com.shell.manager.ui.listener.event.RefreshServerTreeEvent;
 import com.shell.manager.ui.panel.MainPanelWindow;
+import com.shell.manager.ui.panel.OperateContainerPanel;
+import com.shell.manager.ui.panel.OperateServerPanel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.NumberUtils;
@@ -32,8 +34,12 @@ public class ServerTreeMouseListener implements MouseListener, ActionListener {
 
     private JPopupMenu groupMenu;
     private JPopupMenu serverMenu;
+    private JPopupMenu serverNodeMenu;
     private JMenuItem addGroupItem;
     private JMenuItem addServerItem;
+    private JMenuItem delServerItem;
+    private JMenuItem editServerItem;
+    private JMenuItem outPutServerStreamItem;
 
     private JTree tree;
     private String currentNodeName;
@@ -42,12 +48,24 @@ public class ServerTreeMouseListener implements MouseListener, ActionListener {
         this.tree = jTree;
         groupMenu = new JPopupMenu();
         serverMenu = new JPopupMenu();
+        serverNodeMenu = new JPopupMenu();
         addGroupItem = new JMenuItem("add group");
         addServerItem = new JMenuItem("add server");
+        delServerItem = new JMenuItem("delete server");
+        editServerItem = new JMenuItem("edit server");
+        editServerItem = new JMenuItem("edit server");
+        outPutServerStreamItem = new JMenuItem("output server");
+
+
         addGroupItem.addActionListener(this);
         addServerItem.addActionListener(this);
+        delServerItem.addActionListener(this);
+
         groupMenu.add(addGroupItem);
         serverMenu.add(addServerItem);
+        serverNodeMenu.add(delServerItem);
+        serverNodeMenu.add(editServerItem);
+        serverNodeMenu.add(outPutServerStreamItem);
 
         addGroupItem.addActionListener(event -> {
 
@@ -95,6 +113,27 @@ public class ServerTreeMouseListener implements MouseListener, ActionListener {
             }
 
         });
+
+        delServerItem.addActionListener(event -> {
+            try{
+                DatabaseUtil databaseUtil =  (DatabaseUtil)SpringContextUtil.getBean(DatabaseUtil.class);
+                Optional<Server> serverOptional = databaseUtil.getServerRespository().findByName(currentNodeName);
+                Server server = serverOptional.get();
+                databaseUtil.getServerRespository().deleteByName(currentNodeName);
+                SpringContextUtil.publishEvent(new RefreshServerTreeEvent(server));
+            }catch (Exception ex){
+                ex.printStackTrace();
+            }
+        });
+
+        outPutServerStreamItem.addActionListener(event -> {
+            try{
+                OperateContainerPanel operateContainerPanel =  (OperateContainerPanel)SpringContextUtil.getBean(OperateContainerPanel.class);
+                operateContainerPanel.startOutputServerByName(currentNodeName);
+            }catch (Exception ex){
+                ex.printStackTrace();
+            }
+        });
     }
 
 
@@ -138,6 +177,14 @@ public class ServerTreeMouseListener implements MouseListener, ActionListener {
             }
         } else  if (Integer.compare(node.getLevel(), 2) == 0&& e.getClickCount() == 2){
             SpringContextUtil.publishEvent(new OperateServerEvent(currentNodeName));
+        }else  if (Integer.compare(node.getLevel(), 2) == 0&& e.getClickCount() == 1&&e.getButton() == 3){
+            TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+            if (path == null) {
+                return;
+            }
+            tree.setSelectionPath(path);
+            serverNodeMenu.show(tree, e.getX(), e.getY());
+
         }else {
             return;
         }

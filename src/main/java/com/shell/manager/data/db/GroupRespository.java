@@ -22,12 +22,12 @@ public class GroupRespository implements DatabaseInterface<Group> {
 
     public Group saveOrUpdate(Group group) throws Exception {
 
-        if(findByName(group.getName()).isPresent()){
+        if (findByName(group.getName()).isPresent()) {
             Connection connection = localDBConnection.getConnection();
             Statement statement = connection.createStatement();
             String sql = "update groups set id = '" + group.getId() + "',  name = '" + group.getName() + "')";
             statement.execute(sql);
-        }else {
+        } else {
             Connection connection = localDBConnection.getConnection();
             Statement statement = connection.createStatement();
             String sql = "insert into groups('id','name')values('" + group.getId() + "','" + group.getName() + "')";
@@ -52,44 +52,52 @@ public class GroupRespository implements DatabaseInterface<Group> {
     public Optional<Group> findById(String id) throws Exception {
         Connection connection = localDBConnection.getConnection();
         Statement statement = connection.createStatement();
-        String sql = "select * from groups where id='"+id+"'";
+        String sql = "select * from groups where id='" + id + "'";
         ResultSet rs = statement.executeQuery(sql);
         if (rs.next()) {
             String name = rs.getString("name");
-            Group group = new Group(id,name);
-            return  Optional.of(group);
+            Group group = new Group(id, name);
+            return Optional.of(group);
         }
-        return  Optional.empty();
+        return Optional.empty();
+    }
+
+    @Override
+    public void deleteByName(String name) throws Exception {
+
     }
 
     @Override
     public List<Group> queryAll() throws Exception {
-        List<Group> groups = new ArrayList<>();
-        Connection connection = localDBConnection.getConnection();
-        Statement statement = connection.createStatement();
-        String sql = "select * from groups";
-        ResultSet rs = statement.executeQuery(sql);
-        while (rs.next()) {
-            String id = rs.getString("id");
-            String name = rs.getString("name");
-            Group group = new Group(id,name);
-            groups.add(group);
+
+        synchronized (GroupRespository.class) {
+            List<Group> groups = new ArrayList<>();
+            Connection connection = localDBConnection.getConnection();
+            Statement statement = connection.createStatement();
+            String sql = "select * from groups";
+            ResultSet rs = statement.executeQuery(sql);
+            while (rs.next()) {
+                String id = rs.getString("id");
+                String name = rs.getString("name");
+                Group group = new Group(id, name);
+                groups.add(group);
+            }
+            return groups;
         }
-        return groups;
     }
 
     @Override
     public Optional<Group> findByName(String name) throws Exception {
         Connection connection = localDBConnection.getConnection();
         Statement statement = connection.createStatement();
-        String sql = "select * from groups where name='"+name+"'";
+        String sql = "select * from groups where name='" + name + "'";
         ResultSet rs = statement.executeQuery(sql);
         if (rs.next()) {
             String id = rs.getString("id");
-            Group group = new Group(id,name);
-            return  Optional.of(group);
+            Group group = new Group(id, name);
+            return Optional.of(group);
         }
-        return  Optional.empty();
+        return Optional.empty();
     }
 
     @Override

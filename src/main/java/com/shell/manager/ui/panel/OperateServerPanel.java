@@ -55,12 +55,16 @@ public class OperateServerPanel extends JPanel implements KeyListener ,UIUpdateL
     public void connectSSH(String nodeName) throws Exception {
         databaseUtil =(DatabaseUtil) SpringContextUtil.getBean(DatabaseUtil.class);
         Server server =  databaseUtil.getServerRespository().findByName(nodeName).get();
-        sshAgent.initSession(server.getIp(),server.getUsername(),server.getPassword());
+        sshAgent.initSession(nodeName,server.getIp(),server.getUsername(),server.getPassword());
 
     }
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     @Override // 按下
@@ -116,4 +120,11 @@ public class OperateServerPanel extends JPanel implements KeyListener ,UIUpdateL
     }
 
 
+    public void startOutputStream() throws IOException {
+        sshAgent.startOutputStream();
+    }
+
+    public void stopOutputStream() {
+        sshAgent.stopOutputStream();
+    }
 }

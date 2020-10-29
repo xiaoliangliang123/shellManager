@@ -47,4 +47,12 @@ public class GenerateUtil {
         return time;
     }
 
+    public static String currentFileTime() {
+
+        Date date = new Date();
+        SimpleDateFormat sdformat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+        String time = sdformat.format(date);
+        return time;
+    }
+
 }

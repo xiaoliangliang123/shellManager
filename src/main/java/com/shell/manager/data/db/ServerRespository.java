@@ -22,18 +22,23 @@ public class ServerRespository implements DatabaseInterface<Server> {
 
     public Server saveOrUpdate(Server server) throws Exception {
 
-        if(findByName(server.getName()).isPresent()){
-            Connection connection = localDBConnection.getConnection();
-            Statement statement = connection.createStatement();
-            String sql = "update server set id = '" + server.getId() + "', groupName = '"+server.getGroupName()+"' ,  name = '" + server.getName() + "',ip =  '"+server.getIp()+"',username ='"+server.getUsername()+"',password='"+server.getPassword()+"')";
-            statement.execute(sql);
-        }else {
-            Connection connection = localDBConnection.getConnection();
-            Statement statement = connection.createStatement();
-            String sql = "insert into server('id','groupName','name','ip','username','password')values('" + server.getId() + "', '"+server.getGroupName()+"','" + server.getName() + "','"+server.getIp()+"','"+server.getUsername()+"','"+server.getPassword()+"')";
-            statement.execute(sql);
+        Connection connection = localDBConnection.getConnection();
+
+        try {
+            if(findByName(server.getName()).isPresent()){
+                Statement statement = connection.createStatement();
+                String sql = "update server set id = '" + server.getId() + "', groupName = '"+server.getGroupName()+"' ,  name = '" + server.getName() + "',ip =  '"+server.getIp()+"',username ='"+server.getUsername()+"',password='"+server.getPassword()+"')";
+                statement.execute(sql);
+            }else {
+                Statement statement = connection.createStatement();
+                String sql = "insert into server('id','groupName','name','ip','username','password')values('" + server.getId() + "', '"+server.getGroupName()+"','" + server.getName() + "','"+server.getIp()+"','"+server.getUsername()+"','"+server.getPassword()+"')";
+                statement.execute(sql);
+            }
+            return server;
+        }finally {
+            connection.close();
         }
-        return server;
+
     }
 
     @PostConstruct
@@ -71,62 +76,93 @@ public class ServerRespository implements DatabaseInterface<Server> {
     }
 
     @Override
-    public List<Server> queryAll() throws Exception {
-        List<Server> servers = new ArrayList<>();
+    public void deleteByName(String name) throws Exception {
         Connection connection = localDBConnection.getConnection();
-        Statement statement = connection.createStatement();
-        String sql = "select * from groups";
-        ResultSet rs = statement.executeQuery(sql);
-        while (rs.next()) {
-            String id = rs.getString("id");
-            String name = rs.getString("name");
-            String groupName = rs.getString("groupName");
-            String ip = rs.getString("ip");
-            String username = rs.getString("username");
-            String password = rs.getString("password");
-
-            Server server = new Server(id,groupName,name,ip,username,password);
-            servers.add(server);
+        try {
+            Statement statement = connection.createStatement();
+            String sql = "delete from server where name ='" + name + "'";
+            statement.executeUpdate(sql);
+        }finally {
+            connection.close();
         }
-        return servers;
+
+
+    }
+
+    @Override
+    public List<Server> queryAll() throws Exception {
+
+            List<Server> servers = new ArrayList<>();
+            Connection connection = localDBConnection.getConnection();
+            Statement statement = connection.createStatement();
+            String sql = "select * from groups";
+            ResultSet rs = statement.executeQuery(sql);
+            while (rs.next()) {
+                String id = rs.getString("id");
+                String name = rs.getString("name");
+                String groupName = rs.getString("groupName");
+                String ip = rs.getString("ip");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+
+                Server server = new Server(id, groupName, name, ip, username, password);
+                servers.add(server);
+            }
+
+            return servers;
+
     }
 
     @Override
     public Optional<Server> findByName(String name) throws Exception {
+
+
         Connection connection = localDBConnection.getConnection();
-        Statement statement = connection.createStatement();
-        String sql = "select * from server where name='"+name+"'";
-        ResultSet rs = statement.executeQuery(sql);
-        if (rs.next()) {
-            String id = rs.getString("id");
-            String groupName = rs.getString("groupName");
-            String ip = rs.getString("ip");
-            String username = rs.getString("username");
-            String password = rs.getString("password");
-            Server server = new Server(id,groupName,name,ip,username,password);
-            return  Optional.of(server);
+        try {
+            Statement statement = connection.createStatement();
+            String sql = "select * from server where name='"+name+"'";
+            ResultSet rs = statement.executeQuery(sql);
+            if (rs.next()) {
+                String id = rs.getString("id");
+                String groupName = rs.getString("groupName");
+                String ip = rs.getString("ip");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                Server server = new Server(id,groupName,name,ip,username,password);
+                return  Optional.of(server);
+            }
+            return  Optional.empty();
+        }finally {
+            connection.close();
         }
-        return  Optional.empty();
+
     }
 
     @Override
     public List<Server> queryAllByParentName(String parentName) throws Exception {
-        List<Server> servers = new ArrayList<>();
         Connection connection = localDBConnection.getConnection();
-        Statement statement = connection.createStatement();
-        String sql = "select * from server where groupName = '"+parentName+"'";
-        ResultSet rs = statement.executeQuery(sql);
-        while (rs.next()) {
-            String id = rs.getString("id");
-            String name = rs.getString("name");
-            String groupName = rs.getString("groupName");
-            String ip = rs.getString("ip");
-            String username = rs.getString("username");
-            String password = rs.getString("password");
-            Server server = new Server(id,groupName,name,ip,username,password);
-            servers.add(server);
+
+        try {
+            List<Server> servers = new ArrayList<>();
+
+            Statement statement = connection.createStatement();
+            String sql = "select * from server where groupName = '"+parentName+"'";
+            ResultSet rs = statement.executeQuery(sql);
+            while (rs.next()) {
+                String id = rs.getString("id");
+                String name = rs.getString("name");
+                String groupName = rs.getString("groupName");
+                String ip = rs.getString("ip");
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                Server server = new Server(id,groupName,name,ip,username,password);
+                servers.add(server);
+            }
+            return servers;
+        }finally {
+            connection.close();
         }
-        return servers;
+
     }
 
 

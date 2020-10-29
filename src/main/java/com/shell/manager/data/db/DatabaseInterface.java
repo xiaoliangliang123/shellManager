@@ -14,6 +14,9 @@ public interface DatabaseInterface<T> {
 
     public Optional<T> findById(String id) throws Exception;
 
+    public void deleteByName(String name) throws Exception;
+
+
     List<T> queryAll() throws Exception;
 
     Optional<T> findByName(String content) throws Exception;
