@@ -69,7 +69,10 @@ public class SSHAgent extends UIUpdateListener {
                 try {
                     while ((line = stdout.readLine()) != null) {
                         onUpdate(line);
-                        if(startOutputStream) {
+                        if(startOutputStream&&line.equals("")) {
+                            outPutQueue.add(GenerateUtil.currentTime());
+                        }
+                        else if(startOutputStream) {
                             outPutQueue.add(line);
                         }
                     }

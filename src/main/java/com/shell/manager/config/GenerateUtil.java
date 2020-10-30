@@ -42,7 +42,7 @@ public class GenerateUtil {
     public static String currentTime() {
 
         Date date = new Date();
-        SimpleDateFormat sdformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat sdformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         String time = sdformat.format(date);
         return time;
     }
