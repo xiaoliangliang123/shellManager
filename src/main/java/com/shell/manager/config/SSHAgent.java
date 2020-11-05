@@ -39,10 +39,10 @@ public class SSHAgent extends UIUpdateListener {
     private BufferedReader stderr;
     private ExecutorService service = Executors.newFixedThreadPool(3);
     private boolean startOutputStream = false;
-    private String name ;
+    private String name;
     private FileWriter fileWriter = null;
 
-    public void initSession(String name,String hostName, String userName, String passwd) throws IOException, InterruptedException {
+    public void initSession(String name, String hostName, String userName, String passwd) throws IOException, InterruptedException {
         connection = new Connection(hostName);
         connection.connect();
         this.name = name;
@@ -51,9 +51,9 @@ public class SSHAgent extends UIUpdateListener {
             throw new RuntimeException("Authentication failed. Please check hostName, userName and passwd");
         }
         session = connection.openSession();
+        execCommand("");
         session.requestDumbPTY();
         session.startShell();
-        execCommand("");
         session.waitForCondition(ChannelCondition.STDOUT_DATA | ChannelCondition.CLOSED | ChannelCondition.EOF | ChannelCondition.EXIT_STATUS, 30000);
         stdout = new BufferedReader(new InputStreamReader(new StreamGobbler(session.getStdout()), StandardCharsets.UTF_8));
         stderr = new BufferedReader(new InputStreamReader(new StreamGobbler(session.getStderr()), StandardCharsets.UTF_8));
@@ -63,22 +63,22 @@ public class SSHAgent extends UIUpdateListener {
     }
 
     public void onCallback() {
-        service.submit(()-> {
+        service.submit(() -> {
 
-                String line;
-                try {
-                    while ((line = stdout.readLine()) != null) {
-                        onUpdate(line);
-                        if(startOutputStream&&line.equals("")) {
-                            outPutQueue.add(GenerateUtil.currentTime());
-                        }
-                        else if(startOutputStream) {
-                            outPutQueue.add(line);
-                        }
+            String line;
+            try {
+                while ((line = stdout.readLine()) != null) {
+                    System.out.println(line);
+                    onUpdate(line);
+                    if (startOutputStream && line.equals("")) {
+                        outPutQueue.add(GenerateUtil.currentTime());
+                    } else if (startOutputStream) {
+                        outPutQueue.add(line);
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
 
         service.submit(() -> {
@@ -87,8 +87,14 @@ public class SSHAgent extends UIUpdateListener {
 
                 String cmd = null;
                 while ((cmd = msgQueue.take()) != null) {
-                    printWriter.write(cmd);
-                    printWriter.flush();
+
+                    if (!cmd.equals("\n\t")&&!cmd.equals("\n\r")) {
+                        printWriter.write(cmd);
+                        printWriter.flush();
+                    } else {
+                        printWriter.write("\n");
+                        printWriter.flush();
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -99,7 +105,7 @@ public class SSHAgent extends UIUpdateListener {
             try {
                 String line = null;
                 while ((line = outPutQueue.take()) != null) {
-                     fileWriter.write(line+"\r\n");
+                    fileWriter.write(line + "\r\n");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -109,8 +115,17 @@ public class SSHAgent extends UIUpdateListener {
     }
 
     public void execCommand(String cmd) throws IOException {
+        msgQueue.add(cmd + "\n");
+        //session.execCommand(cmd+"\n\r");
+    }
+
+    public void writeBytes(String cmd) throws IOException {
+        msgQueue.add(cmd + "\n\r");
+        //session.execCommand(cmd+"\n\r");
+    }
+
+    public void execCommandNoneEntry(String cmd) throws IOException {
         msgQueue.add(cmd);
-        msgQueue.add("\n\r");
         //session.execCommand(cmd+"\n\r");
     }
 
@@ -133,7 +148,7 @@ public class SSHAgent extends UIUpdateListener {
         String user = "root";
         String password = "Madness1111";
         SSHAgent sshAgent = new SSHAgent();
-        sshAgent.initSession(name,host, user, password);
+        sshAgent.initSession(name, host, user, password);
         sshAgent.onCallback();
         sshAgent.execCommand("");
 
@@ -143,11 +158,11 @@ public class SSHAgent extends UIUpdateListener {
 
     public void startOutputStream() throws IOException {
         String path = System.getProperty("user.dir");
-        File file = new File(path+File.separator+name+"_"+ GenerateUtil.currentFileTime()+".log");
-        if(!file.exists()){
+        File file = new File(path + File.separator + name + "_" + GenerateUtil.currentFileTime() + ".log");
+        if (!file.exists()) {
             file.createNewFile();
         }
-        if(fileWriter!=null){
+        if (fileWriter != null) {
             fileWriter.close();
             fileWriter = null;
         }

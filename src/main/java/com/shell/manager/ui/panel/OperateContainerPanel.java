@@ -22,8 +22,8 @@ public class OperateContainerPanel extends JTabbedPane{
 
         OperateServerPanel operateServerPanel = new OperateServerPanel();
         operateServerPanel.setTitle(name);
-        operateServerPanel.connectSSH(name);
         addTab(name,operateServerPanel);
+        operateServerPanel.connectSSH(name);
         this.updateUI();
     }
 
