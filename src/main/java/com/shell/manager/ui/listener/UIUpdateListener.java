@@ -17,6 +17,11 @@ public abstract class UIUpdateListener  {
         uiUpdateActioner.doUpdate(content);
     }
 
+    public void getLastIn(String content){
+        uiUpdateActioner.doUpdate(content);
+    }
+
+
     public interface UIUpdateActioner{
         void doUpdate(String content);
     }

@@ -9,6 +9,7 @@ public class KeybordUtil {
     public static final String  KEY_TAB = "Tab";
     public static final char  KEY_TAB_CMD = '\t';
     public static final char  KEY_ENTER_CMD = '\n';
+    public static final String KEY_SHELL_START = "]#";
 
 
     public static boolean isEnter(String keycode) {

@@ -41,7 +41,6 @@ public class OperateServerPanel extends JPanel implements KeyListener, UIUpdateL
             shellArea.setLineWrap(true);
             this.add(jScrollPane, BorderLayout.CENTER);
             requestFocus();
-            shellArea.setLineWrap(true);
             shellArea.addKeyListener(this);
             sshAgent.setUiUpdateActioner(this);
             shellArea.setBackground(Color.black);
@@ -71,16 +70,16 @@ public class OperateServerPanel extends JPanel implements KeyListener, UIUpdateL
     @Override // 按下
     public void keyPressed(KeyEvent e) {
         try {
-            System.out.print("code：" + e.getKeyCode() + "\n");
+            System.out.print("按下：" + e.getKeyCode() + "\n");
             String keycode = KeyEvent.getKeyText(e.getKeyCode());
             if (KeybordUtil.isEnter(keycode)) {
                 sshAgent.execCommandNoneEntry("\n\r");
-            //}
+                //}
 //                sshAgent.execCommand("");
 //                //sshAgent.execCommand(keyBorder.toString());
 //                System.out.print("命令：" + KeyEvent.getKeyText(e.getKeyCode()) + "\n");
-                  keyBorder.setLength(0);
-           }
+                keyBorder.setLength(0);
+            }
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -91,32 +90,37 @@ public class OperateServerPanel extends JPanel implements KeyListener, UIUpdateL
     @Override // 松开
     public void keyReleased(KeyEvent e) {
 
-        //System.out.print("松开：" + e.getKeyCode() + "\n");
+        System.out.print("松开：" + e.getKeyChar() + "\n");
 
     }
 
     @Override // 输入的内容
     public void keyTyped(KeyEvent e) {
-        //System.out.print("输入：" + e.getKeyChar() + "\n");
-        try {
-            //if(!KeybordUtil.isTabChar(e.getKeyChar())&&!KeybordUtil.isEnterChar(e.getKeyChar())) {
-            char keycode = e.getKeyChar();
-            sshAgent.execCommandNoneEntry(keycode + "");
 
-            keyBorder.append(keycode);
-            if (keyBorder.toString().endsWith("\t\t")) {
-                sshAgent.execCommandNoneEntry("\n\t");
+        System.out.print("输入：" + e.getKeyChar() + "\n");
+        char keycode = e.getKeyChar();
+        try {
+            if (!KeybordUtil.isTabChar(e.getKeyChar())) {
+                sshAgent.execCommandNoneEntry(keycode + "");
+            }else {
+                //keyBorder.append(keycode);
                 keyBorder.setLength(0);
+                sshAgent.execCommandNoneEntry("\n\t");
+
+//                if (keyBorder.toString().endsWith("\t\t")) {
+//                    sshAgent.execCommandNoneEntry("\n\t");
+//                    keyBorder.setLength(0);
+//                }
             }
-            //}
         } catch (Exception exception) {
             exception.printStackTrace();
         }
     }
 
-    @Override
+
+        @Override
     public void doUpdate(String content) {
-        //System.out.print(content);
+        System.out.print("line count："+shellArea.getLineCount());
         shellArea.append(content + "\n");
         shellArea.setCaretPosition(shellArea.getText().length() - 1);
 

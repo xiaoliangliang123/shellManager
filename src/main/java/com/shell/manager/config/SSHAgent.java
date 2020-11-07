@@ -9,6 +9,7 @@ import com.shell.manager.ui.listener.UIUpdateListener;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -41,6 +42,8 @@ public class SSHAgent extends UIUpdateListener {
     private boolean startOutputStream = false;
     private String name;
     private FileWriter fileWriter = null;
+    private String lastInput = "";
+    private boolean isStartCommand = false;
 
     public void initSession(String name, String hostName, String userName, String passwd) throws IOException, InterruptedException {
         connection = new Connection(hostName);
@@ -55,8 +58,8 @@ public class SSHAgent extends UIUpdateListener {
         session.requestDumbPTY();
         session.startShell();
         session.waitForCondition(ChannelCondition.STDOUT_DATA | ChannelCondition.CLOSED | ChannelCondition.EOF | ChannelCondition.EXIT_STATUS, 30000);
-        stdout = new BufferedReader(new InputStreamReader(new StreamGobbler(session.getStdout()), StandardCharsets.UTF_8));
-        stderr = new BufferedReader(new InputStreamReader(new StreamGobbler(session.getStderr()), StandardCharsets.UTF_8));
+        stdout = new BufferedReader(new InputStreamReader(new StreamGobbler(session.getStdout()), StandardCharsets.ISO_8859_1));
+        stderr = new BufferedReader(new InputStreamReader(new StreamGobbler(session.getStderr()), StandardCharsets.ISO_8859_1));
         printWriter = new PrintWriter(session.getStdin());
         onCallback();
 
@@ -68,8 +71,17 @@ public class SSHAgent extends UIUpdateListener {
             String line;
             try {
                 while ((line = stdout.readLine()) != null) {
-                    System.out.println(line);
-                    onUpdate(line);
+                    System.out.println("output:"+line);
+
+                    if(isStartCommand){
+                        lastInput = line;
+                        isStartCommand = false;
+                    }
+                    if(StringUtils.isEmpty(lastInput)||!line.startsWith(lastInput)||line.trim().endsWith(KeybordUtil.KEY_SHELL_START)) {
+                        onUpdate(line.trim());
+                    }
+                    if (!line.contains(KeybordUtil.KEY_SHELL_START)) {
+                    }
                     if (startOutputStream && line.equals("")) {
                         outPutQueue.add(GenerateUtil.currentTime());
                     } else if (startOutputStream) {
@@ -88,10 +100,19 @@ public class SSHAgent extends UIUpdateListener {
                 String cmd = null;
                 while ((cmd = msgQueue.take()) != null) {
 
+
+                    System.out.println("command:"+cmd);
                     if (!cmd.equals("\n\t")&&!cmd.equals("\n\r")) {
                         printWriter.write(cmd);
                         printWriter.flush();
-                    } else {
+                    } else if(cmd.equals("\n\t")){
+                        isStartCommand = true;
+                        printWriter.write("\t\t");
+                        printWriter.flush();
+                        printWriter.write("\f");
+                        printWriter.flush();
+                    }else {
+                        isStartCommand = true;
                         printWriter.write("\n");
                         printWriter.flush();
                     }
