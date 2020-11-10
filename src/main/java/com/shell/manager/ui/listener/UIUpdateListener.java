@@ -22,8 +22,15 @@ public abstract class UIUpdateListener  {
     }
 
 
+    public void removeLastLine(){
+        uiUpdateActioner.removeLastLine();
+    }
+
+
     public interface UIUpdateActioner{
         void doUpdate(String content);
+
+        void removeLastLine();
     }
 }
 

@@ -7,6 +7,7 @@ import ch.ethz.ssh2.StreamGobbler;
 import com.shell.manager.data.db.DatabaseUtil;
 import com.shell.manager.ui.listener.UIUpdateListener;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -14,6 +15,8 @@ import org.springframework.util.StringUtils;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -42,8 +45,10 @@ public class SSHAgent extends UIUpdateListener {
     private boolean startOutputStream = false;
     private String name;
     private FileWriter fileWriter = null;
-    private String lastInput = "";
-    private boolean isStartCommand = false;
+    private boolean isLastTab = false;
+    private String lastTabCommand = null;
+    private boolean isFirstOutput = false;
+    private StringBuilder keyBorder = new StringBuilder();
 
     public void initSession(String name, String hostName, String userName, String passwd) throws IOException, InterruptedException {
         connection = new Connection(hostName);
@@ -54,7 +59,7 @@ public class SSHAgent extends UIUpdateListener {
             throw new RuntimeException("Authentication failed. Please check hostName, userName and passwd");
         }
         session = connection.openSession();
-        execCommand("");
+        execCommandNoneEntry("");
         session.requestDumbPTY();
         session.startShell();
         session.waitForCondition(ChannelCondition.STDOUT_DATA | ChannelCondition.CLOSED | ChannelCondition.EOF | ChannelCondition.EXIT_STATUS, 30000);
@@ -71,17 +76,13 @@ public class SSHAgent extends UIUpdateListener {
             String line;
             try {
                 while ((line = stdout.readLine()) != null) {
-                    System.out.println("output:"+line);
+                    System.out.println("output:" + line);
 
-                    if(isStartCommand){
-                        lastInput = line;
-                        isStartCommand = false;
-                    }
-                    if(StringUtils.isEmpty(lastInput)||!line.startsWith(lastInput)||line.trim().endsWith(KeybordUtil.KEY_SHELL_START)) {
-                        onUpdate(line.trim());
-                    }
-                    if (!line.contains(KeybordUtil.KEY_SHELL_START)) {
-                    }
+
+                    //if (!isFirstOutput) {
+                    onUpdate(line.trim());
+                    //}
+                    isFirstOutput = false;
                     if (startOutputStream && line.equals("")) {
                         outPutQueue.add(GenerateUtil.currentTime());
                     } else if (startOutputStream) {
@@ -101,20 +102,46 @@ public class SSHAgent extends UIUpdateListener {
                 while ((cmd = msgQueue.take()) != null) {
 
 
-                    System.out.println("command:"+cmd);
-                    if (!cmd.equals("\n\t")&&!cmd.equals("\n\r")) {
-                        printWriter.write(cmd);
-                        printWriter.flush();
-                    } else if(cmd.equals("\n\t")){
-                        isStartCommand = true;
-                        printWriter.write("\t\t");
-                        printWriter.flush();
+                    System.out.println("keyBorder :" + keyBorder.toString() + " command:" + cmd.toLowerCase());
+                    if (cmd.equals("\t")) {
+
+                        if (!isLastTab) {
+
+                            printWriter.write(keyBorder.toString() + "\t");
+                            printWriter.flush();
+                        } else {
+                            printWriter.write("\t\t");
+                            printWriter.flush();
+                        }
+                        System.out.println("size:" + keyBorder.length());
                         printWriter.write("\f");
                         printWriter.flush();
-                    }else {
-                        isStartCommand = true;
-                        printWriter.write("\n");
+                        isFirstOutput = true;
+                        isLastTab = true;
+                        lastTabCommand = keyBorder.toString();
+                        keyBorder.setLength(0);
+
+                    } else if (cmd.equals("\b")) {
+
+                        printWriter.write("\b");
                         printWriter.flush();
+                        int size = keyBorder.length() > 1 ? keyBorder.length() - 1 : 0;
+                        System.out.println("size:" + size);
+                        keyBorder.setLength(size);
+                        isLastTab = false;
+                    } else if (cmd.equals("\n")) {
+                        printWriter.write(keyBorder.toString());
+                        printWriter.write("\n\n");
+                        printWriter.flush();
+                        isFirstOutput = true;
+                        keyBorder.setLength(0);
+                        isLastTab = false;
+                    } else {
+                        keyBorder.append(cmd);
+                        if (isLastTab) {
+                            printWriter.write(cmd);
+                            printWriter.flush();
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -135,19 +162,32 @@ public class SSHAgent extends UIUpdateListener {
         });
     }
 
-    public void execCommand(String cmd) throws IOException {
-        msgQueue.add(cmd + "\n");
-        //session.execCommand(cmd+"\n\r");
+    private String stackOutput(String line) {
+
+        StringBuilder sb = new StringBuilder();
+        LinkedList linkedList = new LinkedList();
+        char[] chars = line.toCharArray();
+        for (char c : chars) {
+            if (c != '\b') {
+                linkedList.addLast(c);
+            } else {
+                linkedList.removeLast();
+            }
+        }
+        Iterator iterator = linkedList.iterator();
+        while (iterator.hasNext()) {
+            sb.append(iterator.next());
+        }
+
+        return sb.toString();
     }
 
-    public void writeBytes(String cmd) throws IOException {
-        msgQueue.add(cmd + "\n\r");
-        //session.execCommand(cmd+"\n\r");
+    public void execCommand(String cmd) throws IOException {
+        msgQueue.add(cmd + "\n");
     }
 
     public void execCommandNoneEntry(String cmd) throws IOException {
         msgQueue.add(cmd);
-        //session.execCommand(cmd+"\n\r");
     }
 
 

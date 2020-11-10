@@ -70,16 +70,16 @@ public class OperateServerPanel extends JPanel implements KeyListener, UIUpdateL
     @Override // 按下
     public void keyPressed(KeyEvent e) {
         try {
-            System.out.print("按下：" + e.getKeyCode() + "\n");
-            String keycode = KeyEvent.getKeyText(e.getKeyCode());
-            if (KeybordUtil.isEnter(keycode)) {
-                sshAgent.execCommandNoneEntry("\n\r");
-                //}
-//                sshAgent.execCommand("");
-//                //sshAgent.execCommand(keyBorder.toString());
-//                System.out.print("命令：" + KeyEvent.getKeyText(e.getKeyCode()) + "\n");
-                keyBorder.setLength(0);
-            }
+//            sshAgent.execCommandNoneEntry("\n\r");
+//            System.out.print("按下：" + e.getKeyCode() + "\n");
+//            String keycode = KeyEvent.getKeyText(e.getKeyCode());
+//            if (KeybordUtil.isEnter(keycode)) {
+//                sshAgent.execCommandNoneEntry("\n\r");
+//                //}
+////                sshAgent.execCommand("");
+////                //sshAgent.execCommand(keyBorder.toString());
+////                System.out.print("命令：" + KeyEvent.getKeyText(e.getKeyCode()) + "\n");
+//                keyBorder.setLength(0)
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -99,19 +99,26 @@ public class OperateServerPanel extends JPanel implements KeyListener, UIUpdateL
 
         System.out.print("输入：" + e.getKeyChar() + "\n");
         char keycode = e.getKeyChar();
-        try {
-            if (!KeybordUtil.isTabChar(e.getKeyChar())) {
-                sshAgent.execCommandNoneEntry(keycode + "");
-            }else {
-                //keyBorder.append(keycode);
-                keyBorder.setLength(0);
-                sshAgent.execCommandNoneEntry("\n\t");
 
-//                if (keyBorder.toString().endsWith("\t\t")) {
-//                    sshAgent.execCommandNoneEntry("\n\t");
-//                    keyBorder.setLength(0);
-//                }
-            }
+        try {
+            sshAgent.execCommandNoneEntry(keycode + "");
+
+//            if (KeybordUtil.isTabChar(e.getKeyChar())) {
+//
+//                sshAgent.execCommandNoneEntry("\t ");
+//                sshAgent.execCommandNoneEntry("\f ");
+//
+////                sshAgent.execCommandNoneEntry(keycode + "");
+////            }else {
+////                //keyBorder.append(keycode);
+////                keyBorder.setLength(0);
+////                sshAgent.execCommandNoneEntry("\n\t");
+////
+//////                if (keyBorder.toString().endsWith("\t\t")) {
+//////                    sshAgent.execCommandNoneEntry("\n\t");
+//////                    keyBorder.setLength(0);
+//////                }
+//            }
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -120,11 +127,15 @@ public class OperateServerPanel extends JPanel implements KeyListener, UIUpdateL
 
         @Override
     public void doUpdate(String content) {
-        System.out.print("line count："+shellArea.getLineCount());
         shellArea.append(content + "\n");
         shellArea.setCaretPosition(shellArea.getText().length() - 1);
 
 
+    }
+
+    @Override
+    public void removeLastLine() {
+        shellArea.setRows(4);
     }
 
     @Override
