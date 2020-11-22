@@ -54,7 +54,7 @@ public class ServerTreeMouseListener implements MouseListener, ActionListener {
         delServerItem = new JMenuItem("delete server");
         editServerItem = new JMenuItem("edit server");
         editServerItem = new JMenuItem("edit server");
-        outPutServerStreamItem = new JMenuItem("output server");
+        outPutServerStreamItem = new JMenuItem("start output server");
 
 
         addGroupItem.addActionListener(this);
@@ -128,8 +128,15 @@ public class ServerTreeMouseListener implements MouseListener, ActionListener {
 
         outPutServerStreamItem.addActionListener(event -> {
             try{
-                OperateContainerPanel operateContainerPanel =  (OperateContainerPanel)SpringContextUtil.getBean(OperateContainerPanel.class);
-                operateContainerPanel.startOutputServerByName(currentNodeName);
+                if(outPutServerStreamItem.getText().equals("start output server")) {
+                    OperateContainerPanel operateContainerPanel = (OperateContainerPanel) SpringContextUtil.getBean(OperateContainerPanel.class);
+                    operateContainerPanel.startOutputServerByName(currentNodeName);
+                    outPutServerStreamItem.setText("stop output server");
+                }else {
+                    OperateContainerPanel operateContainerPanel = (OperateContainerPanel) SpringContextUtil.getBean(OperateContainerPanel.class);
+                    operateContainerPanel.stopOutputServerByName(currentNodeName);
+                    outPutServerStreamItem.setText("start output server");
+                }
             }catch (Exception ex){
                 ex.printStackTrace();
             }

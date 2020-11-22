@@ -40,7 +40,7 @@ public class OperateContainerPanel extends JTabbedPane{
         }
     }
 
-    public void stopOutputServerByName(String currentNodeName) {
+    public void stopOutputServerByName(String currentNodeName) throws IOException {
         int count = getComponentCount();
         for(int i = 0 ; i < count;i++){
             java.awt.Component component = getComponent(i);

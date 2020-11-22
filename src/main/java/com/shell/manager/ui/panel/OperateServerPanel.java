@@ -153,7 +153,7 @@ public class OperateServerPanel extends JPanel implements KeyListener, UIUpdateL
         sshAgent.startOutputStream();
     }
 
-    public void stopOutputStream() {
+    public void stopOutputStream() throws IOException {
         sshAgent.stopOutputStream();
     }
 }

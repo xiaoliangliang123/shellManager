@@ -59,7 +59,7 @@ public class SSHAgent extends UIUpdateListener {
             throw new RuntimeException("Authentication failed. Please check hostName, userName and passwd");
         }
         session = connection.openSession();
-        execCommandNoneEntry("");
+        execCommand("");
         session.requestDumbPTY();
         session.startShell();
         session.waitForCondition(ChannelCondition.STDOUT_DATA | ChannelCondition.CLOSED | ChannelCondition.EOF | ChannelCondition.EXIT_STATUS, 30000);
@@ -103,46 +103,48 @@ public class SSHAgent extends UIUpdateListener {
 
 
                     System.out.println("keyBorder :" + keyBorder.toString() + " command:" + cmd.toLowerCase());
-                    if (cmd.equals("\t")) {
-
-                        if (!isLastTab) {
-
-                            printWriter.write(keyBorder.toString() + "\t");
-                            printWriter.flush();
-                        } else {
-                            printWriter.write("\t\t");
-                            printWriter.flush();
-                        }
-                        System.out.println("size:" + keyBorder.length());
-                        printWriter.write("\f");
-                        printWriter.flush();
-                        isFirstOutput = true;
-                        isLastTab = true;
-                        lastTabCommand = keyBorder.toString();
-                        keyBorder.setLength(0);
-
-                    } else if (cmd.equals("\b")) {
-
-                        printWriter.write("\b");
-                        printWriter.flush();
-                        int size = keyBorder.length() > 1 ? keyBorder.length() - 1 : 0;
-                        System.out.println("size:" + size);
-                        keyBorder.setLength(size);
-                        isLastTab = false;
-                    } else if (cmd.equals("\n")) {
-                        printWriter.write(keyBorder.toString());
-                        printWriter.write("\n\n");
-                        printWriter.flush();
-                        isFirstOutput = true;
-                        keyBorder.setLength(0);
-                        isLastTab = false;
-                    } else {
-                        keyBorder.append(cmd);
-                        if (isLastTab) {
-                            printWriter.write(cmd);
-                            printWriter.flush();
-                        }
-                    }
+                    printWriter.write(cmd);
+                    printWriter.flush();
+                    //                    if (cmd.equals("\t")) {
+//
+//                        if (!isLastTab) {
+//
+//                            printWriter.write(keyBorder.toString() + "\t");
+//                            printWriter.flush();
+//                        } else {
+//                            printWriter.write("\t\t");
+//                            printWriter.flush();
+//                        }
+//                        System.out.println("size:" + keyBorder.length());
+//                        printWriter.write("\f");
+//                        printWriter.flush();
+//                        isFirstOutput = true;
+//                        isLastTab = true;
+//                        lastTabCommand = keyBorder.toString();
+//                        keyBorder.setLength(0);
+//
+//                    } else if (cmd.equals("\b")) {
+//
+//                        printWriter.write("\b");
+//                        printWriter.flush();
+//                        int size = keyBorder.length() > 1 ? keyBorder.length() - 1 : 0;
+//                        System.out.println("size:" + size);
+//                        keyBorder.setLength(size);
+//                        isLastTab = false;
+//                    } else if (cmd.equals("\n")) {
+//                        printWriter.write(keyBorder.toString());
+//                        printWriter.write("\n\n");
+//                        printWriter.flush();
+//                        isFirstOutput = true;
+//                        keyBorder.setLength(0);
+//                        isLastTab = false;
+//                    } else {
+//                        keyBorder.append(cmd);
+//                        if (isLastTab) {
+//                            printWriter.write(cmd);
+//                            printWriter.flush();
+//                        }
+//                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -231,7 +233,11 @@ public class SSHAgent extends UIUpdateListener {
         startOutputStream = true;
     }
 
-    public void stopOutputStream() {
+    public void stopOutputStream() throws IOException {
         startOutputStream = false;
+        if (fileWriter != null) {
+            fileWriter.close();
+            fileWriter = null;
+        }
     }
 }

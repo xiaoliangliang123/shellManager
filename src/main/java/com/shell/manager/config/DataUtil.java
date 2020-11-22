@@ -4,11 +4,15 @@ package com.shell.manager.config;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 
 
 public class DataUtil {
 
 
+    public static URL getImgURLFromResourcesByName(String name) {
+        return DataUtil.class.getResource("/imgs/"+name);
+    }
 
     public static String getImgFromResourcesByName(String name) {
        return DataUtil.class.getResource("/imgs/"+name).getFile();

@@ -28,15 +28,12 @@ public class DBTreeCellRenderer extends DefaultTreeCellRenderer {
 
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
         if(node.getLevel() ==0) {
-            String path = DataUtil.getImgFromResourcesByName("img_servers.png");
-            this.setIcon(new ImageIcon(path));
+            this.setIcon(new ImageIcon(DataUtil.getImgURLFromResourcesByName("img_servers.png")));
         }else if(node.getLevel() ==1){
-            String path = DataUtil.getImgFromResourcesByName("img_group.png");
-            this.setIcon(new ImageIcon(path));
+            this.setIcon(new ImageIcon(DataUtil.getImgURLFromResourcesByName("img_group.png")));
         }
         else if(node.getLevel() ==2){
-            String path = DataUtil.getImgFromResourcesByName("img_server.png");
-            this.setIcon(new ImageIcon(path));
+            this.setIcon(new ImageIcon(DataUtil.getImgURLFromResourcesByName("img_server.png")));
         }
 
         return this;
